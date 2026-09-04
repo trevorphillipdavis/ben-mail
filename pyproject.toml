@@ -1,0 +1,20 @@
+[project]
+name = "aihub-email-integration"
+version = "0.1.0"
+description = "AIHub Email capability and Nylas provider scaffold."
+requires-python = ">=3.11"
+dependencies = [
+  "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["services/email-service/src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

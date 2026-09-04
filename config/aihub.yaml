@@ -14,6 +14,11 @@ providers:
   nylas:
     enabled: false
     config_source: environment
+    api_uri_env: NYLAS_API_URI
+    api_key_env: NYLAS_API_KEY
+    grant_id_env: NYLAS_GRANT_ID
+    allowed_operations:
+      - read_messages
 
 secrets:
   policy: environment-or-local-secret-store

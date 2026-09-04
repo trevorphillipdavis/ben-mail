@@ -44,20 +44,30 @@ config/               Non-secret configuration templates
 
 ## Current Status
 
-This repository currently contains the initial skeleton only. No external API calls, authentication flows, schedulers, or service functionality have been implemented yet.
+This repository currently contains the initial skeleton plus read-only Nylas configuration scaffolding. No external API calls, authentication flows, schedulers, or message operations have been implemented yet.
 
 The first scaffolded capability is Email, with a placeholder Nylas provider.
 
 ## Configuration
 
-Use `config/aihub.yaml` as the local manifest template. Do not commit secrets, tokens, credentials, or machine-specific values.
+Use `config/aihub.yaml` as the local manifest template. Use `.env.example` to see expected environment variables. Do not commit secrets, tokens, credentials, or machine-specific values.
+
+## Local Execution
+
+AIHub should favor local scripts for deterministic work so routine checks and integrations do not require AI tokens.
+
+Check local Nylas configuration with:
+
+```powershell
+$env:PYTHONPATH = "services/email-service/src"
+python -m aihub_email.cli check-config
+```
 
 ## Documentation
 
 Architectural decisions are tracked in:
 
 - `docs/adr/`
-- `obsidian/ADRs/`
 
 Operational knowledge belongs in the local Obsidian vault at `C:/Users/trevo/Dropbox/AIHub`.
 

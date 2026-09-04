@@ -1,0 +1,6 @@
+# Copy to config/spam-auto-delete.yaml if you want to start from an empty shared template.
+#
+# Add domains or exact senders only after reviewing them.
+auto_delete_domains: []
+
+auto_delete_senders: []

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Ben"
+  short_description: "Review and clean email with the local AIHub Nylas integration"

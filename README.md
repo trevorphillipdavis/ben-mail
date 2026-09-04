@@ -1,8 +1,8 @@
-# AIHub
+# AIHub Email Integration
 
-AIHub is a personal AI operating system for orchestrating reusable local services and supported external integrations.
+AIHub Email Integration is a local-first email automation project for reviewing and cleaning up multiple email accounts through Nylas.
 
-The project is organized around capabilities rather than vendors. Orchestrators decide what should happen, services provide stable capability interfaces, providers integrate with external systems, and the local runtime performs deterministic execution whenever practical.
+It is designed as one modular AIHub capability project: reusable scripts do the deterministic work locally, while an AI assistant can reason over the small review outputs and decide what to run next.
 
 ## Architecture
 
@@ -44,13 +44,29 @@ config/               Non-secret configuration templates
 
 ## Current Status
 
-This repository currently contains the initial skeleton plus read-only Nylas configuration scaffolding. No external API calls, authentication flows, schedulers, or message operations have been implemented yet.
+This repository contains working local scaffolding for:
 
-The first scaffolded capability is Email, with a placeholder Nylas provider.
+- multi-account Nylas configuration
+- live Inbox review
+- local exports and summaries
+- local search over exports
+- reviewed delete plans
+- spam sender/domain auto-delete rules
+- safe move-to-Trash execution
 
 ## Configuration
 
-Use `config/aihub.yaml` as the local manifest template. Use `.env.example` to see expected environment variables. Do not commit secrets, tokens, credentials, or machine-specific values.
+Use `.env.example` to see expected environment variables. Do not commit secrets, tokens, credentials, grants, exports, or review files.
+
+See [Setup From Scratch](</C:/Users/trevo/Dropbox/GitHub/email-integration/docs/setup-from-scratch.md>) for the full setup flow.
+
+Quick start:
+
+```powershell
+.\install.ps1
+```
+
+The installer sets up the local Python environment, installs the `ben-mail` Codex skill into the user's local Codex app configuration, and then prompts for Nylas account setup.
 
 ## Local Execution
 
@@ -122,10 +138,10 @@ PowerShell wrappers are available for routine local use:
 .\scripts\refresh-all.ps1 -Limit 10
 ```
 
-Build a local review file for today's messages across all configured accounts:
+Build a live Inbox review for today's messages across all configured accounts:
 
 ```powershell
-.\scripts\today-review.ps1 -Limit 25
+.\scripts\today-review.ps1
 ```
 
 Add another connected Nylas account locally:
@@ -146,12 +162,12 @@ Delete operation rules are tracked in:
 
 - `docs/delete-operations.md`
 
-Operational knowledge belongs in the local Obsidian vault at `C:/Users/trevo/Dropbox/AIHub`.
+Common user workflows are documented in:
 
-Project-specific notes live under:
+- `docs/common-workflows.md`
 
-```text
-Projects/email-integration/
-```
+Assistant/Codex operating rules are documented in:
 
-Only intentionally promoted documentation should be committed to GitHub.
+- `AGENTS.md`
+
+Operational knowledge can live in a local Obsidian vault, but the reusable project source belongs in GitHub.

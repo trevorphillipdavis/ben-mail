@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from typing import Any, Protocol
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -16,6 +17,28 @@ from .models import EmailAddress, EmailMessageSummary
 class RecentMessagesRequest:
     limit: int = 10
 
+    def __post_init__(self) -> None:
+        if self.limit < 1 or self.limit > 50:
+            raise ValueError("limit must be between 1 and 50")
+
+
+class NylasError(Exception):
+    """Base error for Nylas provider failures."""
+
+
+class NylasConfigurationError(NylasError):
+    """Raised when local configuration is missing or invalid."""
+
+
+class NylasApiError(NylasError):
+    def __init__(self, status_code: int, message: str) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
+class NylasNetworkError(NylasError):
+    """Raised when Nylas cannot be reached."""
+
 
 class HttpTransport(Protocol):
     def get_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
@@ -25,9 +48,16 @@ class HttpTransport(Protocol):
 class UrlLibHttpTransport:
     def get_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
         request = Request(url, headers=headers, method="GET")
-        with urlopen(request, timeout=30) as response:
-            body = response.read().decode("utf-8")
-        return json.loads(body)
+        try:
+            with urlopen(request, timeout=30) as response:
+                body = response.read().decode("utf-8")
+            return json.loads(body)
+        except HTTPError as error:
+            raise NylasApiError(error.code, _http_error_message(error)) from error
+        except URLError as error:
+            raise NylasNetworkError(f"Could not reach Nylas: {error.reason}") from error
+        except TimeoutError as error:
+            raise NylasNetworkError("Timed out while contacting Nylas.") from error
 
 
 class NylasEmailClient:
@@ -43,7 +73,9 @@ class NylasEmailClient:
         missing = self._config.missing_required_values()
         if missing:
             missing_values = ", ".join(missing)
-            raise ValueError(f"Nylas configuration is incomplete. Missing: {missing_values}")
+            raise NylasConfigurationError(
+                f"Nylas configuration is incomplete. Missing: {missing_values}"
+            )
 
         query = urlencode({"limit": request.limit})
         base_uri = self._config.api_uri.rstrip("/")
@@ -77,3 +109,28 @@ def _addresses(values: list[dict[str, Any]]) -> list[EmailAddress]:
         for value in values
         if value.get("email")
     ]
+
+
+def _http_error_message(error: HTTPError) -> str:
+    body = error.read().decode("utf-8", errors="replace")
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        payload = {}
+
+    provider_message = (
+        payload.get("error", {}).get("message")
+        or payload.get("message")
+        or body.strip()
+        or "Nylas request failed."
+    )
+
+    if error.code == 401:
+        return "Nylas rejected the API key or authorization header."
+    if error.code == 403:
+        return "Nylas denied access to this grant or scope."
+    if error.code == 404:
+        return "Nylas could not find the grant or requested resource."
+    if error.code == 429:
+        return "Nylas rate limit reached. Try again later."
+    return f"Nylas request failed with HTTP {error.code}: {provider_message}"

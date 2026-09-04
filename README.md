@@ -59,16 +59,16 @@ AIHub should favor local scripts for deterministic work so routine checks and in
 Check local Nylas configuration with:
 
 ```powershell
-$env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli check-config
 ```
 
 List recent messages with:
 
 ```powershell
-$env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli list-recent-messages --limit 10
 ```
+
+By default, commands load local values from `.env`. Use `--env-file path\to\.env` to point at a different local file.
 
 ## Documentation
 

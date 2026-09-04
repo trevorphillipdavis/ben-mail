@@ -1,5 +1,11 @@
 from aihub_email.config import NylasConfig
-from aihub_email.nylas_client import NylasEmailClient, RecentMessagesRequest
+import pytest
+
+from aihub_email.nylas_client import (
+    NylasConfigurationError,
+    NylasEmailClient,
+    RecentMessagesRequest,
+)
 
 
 class FakeTransport:
@@ -41,3 +47,18 @@ def test_list_recent_messages_uses_grant_scoped_read_endpoint():
     assert transport.calls[0][1]["Authorization"] == "Bearer test-key"
     assert messages[0].id == "message-1"
     assert messages[0].from_[0].address == "sender@example.com"
+
+
+def test_list_recent_messages_requires_config():
+    client = NylasEmailClient(NylasConfig(api_key=None, api_uri="https://api.us.nylas.com", grant_id=None))
+
+    with pytest.raises(NylasConfigurationError):
+        client.list_recent_messages(RecentMessagesRequest(limit=5))
+
+
+def test_recent_messages_limit_must_be_in_safe_range():
+    with pytest.raises(ValueError, match="limit must be between 1 and 50"):
+        RecentMessagesRequest(limit=0)
+
+    with pytest.raises(ValueError, match="limit must be between 1 and 50"):
+        RecentMessagesRequest(limit=51)

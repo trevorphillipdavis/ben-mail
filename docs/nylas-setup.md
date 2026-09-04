@@ -37,8 +37,13 @@ The project should favor local scripts for deterministic work. AI should be used
 Check local configuration with:
 
 ```powershell
-$env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli check-config
+```
+
+The CLI loads `.env` by default. To use another local file:
+
+```powershell
+python -m aihub_email.cli --env-file path\to\.env check-config
 ```
 
 ## Read-Only Command
@@ -46,15 +51,19 @@ python -m aihub_email.cli check-config
 List recent messages with:
 
 ```powershell
-$env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli list-recent-messages --limit 10
 ```
 
 For structured output:
 
 ```powershell
-$env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli list-recent-messages --limit 10 --json
+```
+
+If the Windows console displays unusual characters, use ASCII-safe output:
+
+```powershell
+python -m aihub_email.cli list-recent-messages --limit 10 --ascii
 ```
 
 ## Read-Only Boundaries
@@ -66,6 +75,15 @@ The current command:
 - Limit response size.
 - Map provider response data into Email capability models.
 - Avoid send, draft, delete, update, archive, or label operations.
+
+The CLI returns readable local errors for:
+
+- Missing local configuration.
+- Invalid message limits.
+- Bad API keys.
+- Missing or revoked grants.
+- Rate limits.
+- Network failures.
 
 ## References
 

@@ -1,12 +1,12 @@
 # Setup From Scratch
 
-This guide is for setting up the AIHub Email Integration repo on a clean machine.
+This guide is for setting up the Ben Mail repo on a clean machine.
 
 ## 1. Clone The Repo
 
 ```powershell
-git clone https://github.com/YOUR_USERNAME/email-integration.git
-cd email-integration
+git clone https://github.com/YOUR_USERNAME/ben-mail.git
+cd ben-mail
 ```
 
 ## 2. Create Local Environment

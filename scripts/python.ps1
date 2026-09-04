@@ -6,11 +6,11 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $venvPython = Join-Path $repoRoot ".venv\Scripts\python.exe"
+$pythonExe = "python"
 
 if (Test-Path -LiteralPath $venvPython) {
-    & $venvPython @PythonArgs
-    exit $LASTEXITCODE
+    $pythonExe = $venvPython
 }
 
-python @PythonArgs
+& $pythonExe @PythonArgs
 exit $LASTEXITCODE

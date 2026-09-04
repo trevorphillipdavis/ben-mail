@@ -44,15 +44,15 @@ if ((Test-Path -LiteralPath $legacySkill) -and ($legacySkill -ne $targetSkill)) 
 $referencesDir = Join-Path $targetSkill "references"
 New-Item -ItemType Directory -Path $referencesDir -Force | Out-Null
 
-$installLocation = @"
-# Install Location
-
-Run AIHub Email Integration commands from this repo:
-
-````text
-$repoRoot
-````
-"@
+$installLocation = @(
+    "# Install Location"
+    ""
+    "Run Ben Mail commands from this repo:"
+    ""
+    '```text'
+    $repoRoot
+    '```'
+)
 
 Set-Content -LiteralPath (Join-Path $referencesDir "install-location.md") -Value $installLocation
 

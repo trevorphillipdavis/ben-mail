@@ -1,6 +1,6 @@
-# AIHub Email Integration
+# Ben Mail
 
-AIHub Email Integration is a local-first email automation project for reviewing and cleaning up multiple email accounts through Nylas.
+Ben Mail is a local-first email automation project for reviewing and cleaning up multiple email accounts through Nylas.
 
 It is designed as one modular AIHub capability project: reusable scripts do the deterministic work locally, while an AI assistant can reason over the small review outputs and decide what to run next.
 
@@ -58,7 +58,7 @@ This repository contains working local scaffolding for:
 
 Use `.env.example` to see expected environment variables. Do not commit secrets, tokens, credentials, grants, exports, or review files.
 
-See [Setup From Scratch](</C:/Users/trevo/Dropbox/GitHub/email-integration/docs/setup-from-scratch.md>) for the full setup flow.
+See [Setup From Scratch](</C:/Users/trevo/Dropbox/GitHub/ben-mail/docs/setup-from-scratch.md>) for the full setup flow.
 
 Quick start:
 

@@ -1,11 +1,11 @@
 ---
 name: ben-mail
-description: Use the local AIHub email-integration repo to review inboxes, manage Nylas-connected email accounts, build delete plans, and remove spam with safe move-to-Trash workflows.
+description: Use the local Ben Mail repo to review inboxes, manage Nylas-connected email accounts, build delete plans, and remove spam with safe move-to-Trash workflows.
 ---
 
 # Ben
 
-Use this skill when the user asks to check, review, search, summarize, clean up, or delete email using the AIHub email integration.
+Use this skill when the user asks to check, review, search, summarize, clean up, or delete email using Ben Mail.
 
 The implementation repo is the clone that installed this skill. By default, the installer writes the clone path into `references/install-location.md`.
 
@@ -14,12 +14,13 @@ The implementation repo is the clone that installed this skill. By default, the 
 - Prefer deterministic local scripts and Python commands from the repo before reasoning over raw email data.
 - Keep token use low by saving provider results locally and summarizing only the needed fields.
 - Treat `.env`, `exports/`, and `reviews/` as local/private data. Never print secrets from `.env`.
+- The installed skill should point to the user's own cloned repo. That clone is the implementation/runtime; the installed skill is the operating guide.
 - Do not commit or push changes unless the user explicitly asks.
 - Nylas is the current email provider boundary.
 
 ## Finding The Repo
 
-Read `references/install-location.md` when you need the exact local repo path. If that file is missing, ask the user where they cloned `email-integration`.
+Read `references/install-location.md` when you need the exact local repo path. If that file is missing, ask the user where they cloned `ben-mail`.
 
 Run commands from the repo root.
 
@@ -36,6 +37,8 @@ python -m aihub_email.cli execute-delete-plan --plan <plan.json> --yes-trash
 ```
 
 Use `python -m pytest` after changing repo code.
+
+The PowerShell wrappers use `.\scripts\python.ps1` to prefer the repo `.venv` Python. Do not pipe inline Python into that helper; use it for normal arguments such as `-m aihub_email.cli ...`.
 
 ## Freshness Rule
 

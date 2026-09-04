@@ -7,6 +7,8 @@ This repository is a local-first email automation project.
 - Prefer local scripts and deterministic execution before asking an AI model to inspect raw email data.
 - Never print, commit, summarize, or store secrets from `.env`.
 - Treat exports and reviews as local working data. They are ignored by Git and should not be shared.
+- The installed skill should point to the user's own cloned repo. This is expected: the installed skill is the operating guide, and the clone is the local implementation/runtime.
+- Do not write secrets or personal mailbox data into tracked files. Keep `.env`, `.venv`, `exports/`, and `reviews/` ignored.
 - Use Nylas as the provider boundary unless the project explicitly adds another provider.
 - Move messages to Trash by default. Do not permanently delete messages unless the user explicitly requests that exact behavior.
 - Build exact delete plans before live delete actions.

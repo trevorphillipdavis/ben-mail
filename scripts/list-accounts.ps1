@@ -10,4 +10,4 @@ if ($ReadyOnly) {
     $argsList += "--ready-only"
 }
 
-python @argsList
+.\scripts\python.ps1 @argsList

@@ -4,4 +4,4 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path -Parent $PSScriptRoot)
-python -m aihub_email.cli check-config --account $Account
+.\scripts\python.ps1 -m aihub_email.cli check-config --account $Account

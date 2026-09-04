@@ -157,10 +157,10 @@ Write-Host "Saved setup values."
 if (-not $SkipValidation) {
     Write-Host ""
     Write-Host "Checking configured accounts..."
-    python -m aihub_email.cli list-accounts --ready-only
+    .\scripts\python.ps1 -m aihub_email.cli list-accounts --ready-only
 
     foreach ($account in $addedAccounts) {
-        python -m aihub_email.cli check-config --account $account
+        .\scripts\python.ps1 -m aihub_email.cli check-config --account $account
     }
 }
 

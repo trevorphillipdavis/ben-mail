@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
-$accountsJson = python -m aihub_email.cli list-accounts --ready-only --json | ConvertFrom-Json
+$accountsJson = .\scripts\python.ps1 -m aihub_email.cli list-accounts --ready-only --json | ConvertFrom-Json
 $readyAccounts = @($accountsJson | Where-Object { $_.configured -eq $true })
 
 if ($readyAccounts.Count -eq 0) {

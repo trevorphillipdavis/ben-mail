@@ -16,4 +16,4 @@ if ($Json) {
     $argsList += "--json"
 }
 
-python @argsList
+.\scripts\python.ps1 @argsList

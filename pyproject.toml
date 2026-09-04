@@ -5,6 +5,7 @@ description = "AIHub Email capability and Nylas provider scaffold."
 requires-python = ">=3.11"
 dependencies = [
   "pyyaml>=6.0.0",
+  "tzdata>=2025.0",
 ]
 
 [project.optional-dependencies]

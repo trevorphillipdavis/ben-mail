@@ -31,6 +31,7 @@ logs/
 tmp/
 temp/
 exports/
+reviews/
 
 # Local-only Obsidian vault material
 obsidian/

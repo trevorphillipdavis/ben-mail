@@ -122,6 +122,12 @@ PowerShell wrappers are available for routine local use:
 .\scripts\refresh-all.ps1 -Limit 10
 ```
 
+Build a local review file for today's messages across all configured accounts:
+
+```powershell
+.\scripts\today-review.ps1 -Limit 25
+```
+
 Add another connected Nylas account locally:
 
 ```powershell

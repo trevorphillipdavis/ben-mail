@@ -19,6 +19,7 @@ from .nylas_client import (
 )
 from .search import MessageSearchRequest, search_exported_messages
 from .summary import ExportSummary, summarize_export_file, summarize_latest_export
+from .today import TodayReviewRequest, build_today_review
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,6 +57,10 @@ def build_parser() -> argparse.ArgumentParser:
     refresh.add_argument("--top", type=int, default=10, help="Number of top senders to show, 1-50.")
     refresh.add_argument("--json", action="store_true", help="Print JSON summary output.")
     refresh.add_argument("--ascii", action="store_true", help="Print ASCII-safe text output.")
+    today = subparsers.add_parser("today-review", help="Build local review for today's messages.")
+    today.add_argument("--account", action="append", dest="accounts", help="Account alias to include.")
+    today.add_argument("--timezone", default="America/New_York", help="Timezone for today's date.")
+    today.add_argument("--json", action="store_true", help="Print JSON output.")
     return parser
 
 
@@ -167,6 +172,30 @@ def main() -> int:
             print(json.dumps(summary.to_dict(), indent=2))
         else:
             _print_summary(summary, ascii_safe=args.ascii)
+        return 0
+
+    if args.command == "today-review":
+        try:
+            review_path = build_today_review(
+                TodayReviewRequest(
+                    account_ids=args.accounts,
+                    env_file=args.env_file,
+                    timezone_name=args.timezone,
+                )
+            )
+        except ValueError as error:
+            print(f"Invalid request: {error}", file=sys.stderr)
+            return 2
+
+        if args.json:
+            print(review_path.read_text(encoding="utf-8"))
+        else:
+            payload = json.loads(review_path.read_text(encoding="utf-8"))
+            print(f"Review: {review_path}")
+            print(f"Date: {payload['review_date']} ({payload['timezone']})")
+            print(f"Accounts: {payload['account_count']}")
+            print(f"Messages today: {payload['message_count']}")
+            print(f"Action candidates: {payload['action_candidate_count']}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")

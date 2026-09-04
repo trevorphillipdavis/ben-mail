@@ -44,6 +44,9 @@ class HttpTransport(Protocol):
     def get_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
         ...
 
+    def delete_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
+        ...
+
 
 class UrlLibHttpTransport:
     def get_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
@@ -52,6 +55,19 @@ class UrlLibHttpTransport:
             with urlopen(request, timeout=30) as response:
                 body = response.read().decode("utf-8")
             return json.loads(body)
+        except HTTPError as error:
+            raise NylasApiError(error.code, _http_error_message(error)) from error
+        except URLError as error:
+            raise NylasNetworkError(f"Could not reach Nylas: {error.reason}") from error
+        except TimeoutError as error:
+            raise NylasNetworkError("Timed out while contacting Nylas.") from error
+
+    def delete_json(self, url: str, headers: dict[str, str]) -> dict[str, Any]:
+        request = Request(url, headers=headers, method="DELETE")
+        try:
+            with urlopen(request, timeout=30) as response:
+                body = response.read().decode("utf-8")
+            return json.loads(body) if body else {}
         except HTTPError as error:
             raise NylasApiError(error.code, _http_error_message(error)) from error
         except URLError as error:
@@ -88,6 +104,24 @@ class NylasEmailClient:
             },
         )
         return [_message_from_nylas(item) for item in payload.get("data", [])]
+
+    def move_message_to_trash(self, message_id: str) -> dict[str, Any]:
+        missing = self._config.missing_required_values()
+        if missing:
+            missing_values = ", ".join(missing)
+            raise NylasConfigurationError(
+                f"Nylas configuration is incomplete. Missing: {missing_values}"
+            )
+
+        base_uri = self._config.api_uri.rstrip("/")
+        url = f"{base_uri}/v3/grants/{self._config.grant_id}/messages/{message_id}"
+        return self._transport.delete_json(
+            url,
+            headers={
+                "Authorization": f"Bearer {self._config.api_key}",
+                "Accept": "application/json",
+            },
+        )
 
 
 def _message_from_nylas(data: dict[str, Any]) -> EmailMessageSummary:

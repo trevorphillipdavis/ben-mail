@@ -9,6 +9,7 @@ import unicodedata
 
 from .accounts import list_account_statuses
 from .config import NylasConfig
+from .delete_plan import execute_delete_plan
 from .export import message_to_dict, write_message_export
 from .nylas_client import (
     NylasApiError,
@@ -61,6 +62,13 @@ def build_parser() -> argparse.ArgumentParser:
     today.add_argument("--account", action="append", dest="accounts", help="Account alias to include.")
     today.add_argument("--timezone", default="America/New_York", help="Timezone for today's date.")
     today.add_argument("--json", action="store_true", help="Print JSON output.")
+    delete_plan = subparsers.add_parser("execute-delete-plan", help="Move reviewed messages to Trash.")
+    delete_plan.add_argument("--plan", required=True, help="Path to reviewed delete plan JSON.")
+    delete_plan.add_argument(
+        "--yes-trash",
+        action="store_true",
+        help="Required confirmation flag for moving messages to Trash.",
+    )
     return parser
 
 
@@ -196,6 +204,20 @@ def main() -> int:
             print(f"Accounts: {payload['account_count']}")
             print(f"Messages today: {payload['message_count']}")
             print(f"Action candidates: {payload['action_candidate_count']}")
+        return 0
+
+    if args.command == "execute-delete-plan":
+        if not args.yes_trash:
+            print("Refusing to delete without --yes-trash.", file=sys.stderr)
+            return 2
+        try:
+            results = execute_delete_plan(args.plan, env_file=args.env_file)
+        except (ValueError, NylasConfigurationError, NylasApiError, NylasNetworkError) as error:
+            return _print_cli_error(error)
+
+        print(f"Moved {len(results)} messages to Trash.")
+        for result in results:
+            print(f"{result['account_id']}\t{result['message_id']}\t{result['subject']}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")

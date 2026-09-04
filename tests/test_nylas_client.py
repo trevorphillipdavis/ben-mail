@@ -17,6 +17,10 @@ class FakeTransport:
         self.calls.append((url, headers))
         return self.payload
 
+    def delete_json(self, url, headers):
+        self.calls.append((url, headers))
+        return {"request_id": "request-1"}
+
 
 def test_list_recent_messages_uses_grant_scoped_read_endpoint():
     transport = FakeTransport(
@@ -62,3 +66,18 @@ def test_recent_messages_limit_must_be_in_safe_range():
 
     with pytest.raises(ValueError, match="limit must be between 1 and 50"):
         RecentMessagesRequest(limit=51)
+
+
+def test_move_message_to_trash_uses_delete_endpoint():
+    transport = FakeTransport({})
+    config = NylasConfig(
+        api_key="test-key",
+        api_uri="https://api.us.nylas.com",
+        grant_id="grant-1",
+    )
+
+    client = NylasEmailClient(config, transport=transport)
+    client.move_message_to_trash("message-1")
+
+    assert transport.calls[0][0] == "https://api.us.nylas.com/v3/grants/grant-1/messages/message-1"
+    assert transport.calls[0][1]["Authorization"] == "Bearer test-key"

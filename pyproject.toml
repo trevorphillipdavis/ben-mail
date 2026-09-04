@@ -16,5 +16,8 @@ dev = [
 pythonpath = ["services/email-service/src"]
 testpaths = ["tests"]
 
+[tool.setuptools.packages.find]
+where = ["services/email-service/src"]
+
 [tool.ruff]
 line-length = 100

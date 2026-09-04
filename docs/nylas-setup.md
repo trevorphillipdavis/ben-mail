@@ -41,11 +41,25 @@ $env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli check-config
 ```
 
-## Read-Only First Milestone
+## Read-Only Command
 
-The first implemented command should list recent messages for a configured grant.
+List recent messages with:
 
-It should:
+```powershell
+$env:PYTHONPATH = "services/email-service/src"
+python -m aihub_email.cli list-recent-messages --limit 10
+```
+
+For structured output:
+
+```powershell
+$env:PYTHONPATH = "services/email-service/src"
+python -m aihub_email.cli list-recent-messages --limit 10 --json
+```
+
+## Read-Only Boundaries
+
+The current command:
 
 - Use `NYLAS_API_KEY`, `NYLAS_API_URI`, and `NYLAS_GRANT_ID`.
 - Call only read endpoints.

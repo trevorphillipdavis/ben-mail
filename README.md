@@ -63,6 +63,13 @@ $env:PYTHONPATH = "services/email-service/src"
 python -m aihub_email.cli check-config
 ```
 
+List recent messages with:
+
+```powershell
+$env:PYTHONPATH = "services/email-service/src"
+python -m aihub_email.cli list-recent-messages --limit 10
+```
+
 ## Documentation
 
 Architectural decisions are tracked in:

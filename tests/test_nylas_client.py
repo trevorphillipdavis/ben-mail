@@ -53,6 +53,25 @@ def test_list_recent_messages_uses_grant_scoped_read_endpoint():
     assert messages[0].from_[0].address == "sender@example.com"
 
 
+def test_list_recent_messages_adds_date_window_query_parameters():
+    transport = FakeTransport({"data": []})
+    config = NylasConfig(
+        api_key="test-key",
+        api_uri="https://api.us.nylas.com",
+        grant_id="grant-1",
+    )
+
+    client = NylasEmailClient(config, transport=transport)
+    client.list_recent_messages(
+        RecentMessagesRequest(limit=5, received_after=100, received_before=200)
+    )
+
+    assert transport.calls[0][0] == (
+        "https://api.us.nylas.com/v3/grants/grant-1/messages?"
+        "limit=5&received_after=100&received_before=200"
+    )
+
+
 def test_list_recent_messages_requires_config():
     client = NylasEmailClient(NylasConfig(api_key=None, api_uri="https://api.us.nylas.com", grant_id=None))
 
@@ -61,11 +80,11 @@ def test_list_recent_messages_requires_config():
 
 
 def test_recent_messages_limit_must_be_in_safe_range():
-    with pytest.raises(ValueError, match="limit must be between 1 and 50"):
+    with pytest.raises(ValueError, match="limit must be between 1 and 200"):
         RecentMessagesRequest(limit=0)
 
-    with pytest.raises(ValueError, match="limit must be between 1 and 50"):
-        RecentMessagesRequest(limit=51)
+    with pytest.raises(ValueError, match="limit must be between 1 and 200"):
+        RecentMessagesRequest(limit=201)
 
 
 def test_move_message_to_trash_uses_delete_endpoint():
@@ -81,3 +100,46 @@ def test_move_message_to_trash_uses_delete_endpoint():
 
     assert transport.calls[0][0] == "https://api.us.nylas.com/v3/grants/grant-1/messages/message-1"
     assert transport.calls[0][1]["Authorization"] == "Bearer test-key"
+    assert transport.calls[0][1]["Content-Type"] == "application/json"
+
+
+def test_list_recent_messages_excludes_trash_by_default():
+    transport = FakeTransport(
+        {
+            "data": [
+                {"id": "active", "folders": ["Inbox"]},
+                {"id": "trashed", "folders": ["Trash"]},
+            ]
+        }
+    )
+    config = NylasConfig(
+        api_key="test-key",
+        api_uri="https://api.us.nylas.com",
+        grant_id="grant-1",
+    )
+
+    client = NylasEmailClient(config, transport=transport)
+    messages = client.list_recent_messages(RecentMessagesRequest(limit=5))
+
+    assert [message.id for message in messages] == ["active"]
+
+
+def test_list_recent_messages_can_include_trash():
+    transport = FakeTransport(
+        {
+            "data": [
+                {"id": "active", "folders": ["Inbox"]},
+                {"id": "trashed", "folders": ["Trash"]},
+            ]
+        }
+    )
+    config = NylasConfig(
+        api_key="test-key",
+        api_uri="https://api.us.nylas.com",
+        grant_id="grant-1",
+    )
+
+    client = NylasEmailClient(config, transport=transport)
+    messages = client.list_recent_messages(RecentMessagesRequest(limit=5, include_trash=True))
+
+    assert [message.id for message in messages] == ["active", "trashed"]

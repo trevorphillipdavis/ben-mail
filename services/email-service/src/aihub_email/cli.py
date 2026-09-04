@@ -11,6 +11,7 @@ from .accounts import list_account_statuses
 from .config import NylasConfig
 from .delete_plan import execute_delete_plan
 from .export import message_to_dict, write_message_export
+from .inbox_review import review_inbox_non_bulk
 from .nylas_client import (
     NylasApiError,
     NylasConfigurationError,
@@ -39,6 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     recent.add_argument("--ascii", action="store_true", help="Print ASCII-safe text output.")
     recent.add_argument("--export", action="store_true", help="Save results to a local JSON export.")
     recent.add_argument("--output", help="Optional export path.")
+    recent.add_argument("--include-trash", action="store_true", help="Include Trash folder messages.")
     search = subparsers.add_parser("search-exports", help="Search latest local message export.")
     search.add_argument("--account", default="default", help="Named account alias.")
     search.add_argument("--query", help="Text to match in subject, snippet, sender, or recipient.")
@@ -69,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Required confirmation flag for moving messages to Trash.",
     )
+    inbox = subparsers.add_parser("review-inbox", help="Find non-bulk Inbox messages.")
+    inbox.add_argument("--account", required=True, help="Named account alias.")
+    inbox.add_argument("--days", type=int, default=30, help="Number of days to review.")
+    inbox.add_argument("--limit", type=int, default=200, help="Maximum messages to fetch, 1-200.")
+    inbox.add_argument("--json", action="store_true", help="Print JSON output.")
     return parser
 
 
@@ -102,7 +109,12 @@ def main() -> int:
 
     if args.command == "list-recent-messages":
         try:
-            messages = _fetch_recent_messages(args.env_file, args.account, args.limit)
+            messages = _fetch_recent_messages(
+                args.env_file,
+                args.account,
+                args.limit,
+                include_trash=args.include_trash,
+            )
         except (ValueError, NylasConfigurationError, NylasApiError, NylasNetworkError) as error:
             return _print_cli_error(error)
 
@@ -215,9 +227,39 @@ def main() -> int:
         except (ValueError, NylasConfigurationError, NylasApiError, NylasNetworkError) as error:
             return _print_cli_error(error)
 
-        print(f"Moved {len(results)} messages to Trash.")
+        trashed = [result for result in results if result["status"] == "trashed"]
+        failed = [result for result in results if result["status"] == "failed"]
+        print(f"Moved {len(trashed)} messages to Trash. Failed: {len(failed)}.")
         for result in results:
-            print(f"{result['account_id']}\t{result['message_id']}\t{result['subject']}")
+            suffix = f"\t{result['error']}" if result.get("error") else ""
+            _print_line(
+                f"{result['status']}\t{result['account_id']}\t"
+                f"{result['message_id']}\t{result['subject']}{suffix}"
+            )
+        return 0 if not failed else 1
+
+    if args.command == "review-inbox":
+        try:
+            review_path = review_inbox_non_bulk(
+                account_id=args.account,
+                env_file=args.env_file,
+                days=args.days,
+                limit=args.limit,
+            )
+        except (ValueError, NylasConfigurationError, NylasApiError, NylasNetworkError) as error:
+            return _print_cli_error(error)
+        payload = json.loads(review_path.read_text(encoding="utf-8"))
+        if args.json:
+            print(json.dumps(payload, indent=2))
+        else:
+            print(f"Review: {review_path}")
+            print(f"Reviewed: {payload['reviewed_count']}")
+            print(f"Kept: {payload['kept_count']}")
+            print(f"Rejected: {payload['rejected_count']}")
+            for message in payload["kept_messages"]:
+                sender = _first_address(message.get("from", []))
+                subject = _ascii_safe(message.get("subject") or "(no subject)")
+                print(f"{message.get('id')}\t{sender}\t{subject}")
         return 0
 
     parser.error(f"Unknown command: {args.command}")
@@ -225,13 +267,23 @@ def main() -> int:
 
 
 def _print_line(value: str) -> None:
-    print(value.encode("utf-8", errors="replace").decode("utf-8"))
+    line = value.encode("utf-8", errors="replace") + b"\n"
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout.buffer.write(line)
+        sys.stdout.buffer.flush()
+        return
+    print(value.encode("ascii", errors="replace").decode("ascii"))
 
 
-def _fetch_recent_messages(env_file: str, account: str, limit: int):
+def _fetch_recent_messages(
+    env_file: str,
+    account: str,
+    limit: int,
+    include_trash: bool = False,
+):
     config = NylasConfig.from_environment_file(env_file, account_id=account)
     client = NylasEmailClient(config)
-    return client.list_recent_messages(RecentMessagesRequest(limit=limit))
+    return client.list_recent_messages(RecentMessagesRequest(limit=limit, include_trash=include_trash))
 
 
 def _print_cli_error(error: Exception) -> int:

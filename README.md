@@ -142,6 +142,10 @@ Architectural decisions are tracked in:
 
 - `docs/adr/`
 
+Delete operation rules are tracked in:
+
+- `docs/delete-operations.md`
+
 Operational knowledge belongs in the local Obsidian vault at `C:/Users/trevo/Dropbox/AIHub`.
 
 Project-specific notes live under:

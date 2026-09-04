@@ -1,4 +1,4 @@
-"""Local daily review generation from exported Email snapshots."""
+"""Local daily review generation from live Email snapshots."""
 
 from __future__ import annotations
 
@@ -10,8 +10,9 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .accounts import configured_account_ids
-from .export import DEFAULT_EXPORT_DIR
-from .search import latest_export_path
+from .config import NylasConfig
+from .export import DEFAULT_EXPORT_DIR, write_message_export
+from .nylas_client import NylasEmailClient, RecentMessagesRequest
 
 
 DEFAULT_REVIEW_DIR = Path("reviews")
@@ -59,17 +60,19 @@ def build_today_review(request: TodayReviewRequest) -> Path:
     account_results = []
     all_messages = []
     for account_id in account_ids:
-        export_path = latest_export_path(account_id, request.export_dir)
-        if export_path is None:
-            account_results.append(
-                {"account_id": account_id, "export_path": None, "message_count": 0, "messages": []}
+        config = NylasConfig.from_environment_file(request.env_file, account_id=account_id)
+        fetched_messages = NylasEmailClient(config).list_recent_messages(
+            RecentMessagesRequest(
+                limit=200,
+                folder_id="INBOX",
+                received_after=int(start),
+                received_before=int(end),
             )
-            continue
-
-        payload = json.loads(export_path.read_text(encoding="utf-8"))
+        )
+        export_path = write_message_export(fetched_messages, account_id)
         messages = [
             _annotate_message(account_id, message)
-            for message in payload.get("messages", [])
+            for message in json.loads(export_path.read_text(encoding="utf-8")).get("messages", [])
             if _is_message_on_date(message, start, end)
         ]
         account_results.append(

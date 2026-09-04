@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import NylasConfig
-from .nylas_client import NylasEmailClient
+from .nylas_client import NylasError, NylasEmailClient
 
 
 def execute_delete_plan(plan_path: str | Path, env_file: str | Path = ".env") -> list[dict[str, Any]]:
@@ -22,13 +22,20 @@ def execute_delete_plan(plan_path: str | Path, env_file: str | Path = ".env") ->
         message_id = message["message_id"]
         config = NylasConfig.from_environment_file(env_file, account_id=account_id)
         client = NylasEmailClient(config)
-        client.move_message_to_trash(message_id)
+        try:
+            client.move_message_to_trash(message_id)
+            status = "trashed"
+            error = None
+        except NylasError as exc:
+            status = "failed"
+            error = str(exc)
         results.append(
             {
                 "account_id": account_id,
                 "message_id": message_id,
                 "subject": message.get("subject"),
-                "status": "trashed",
+                "status": status,
+                "error": error,
             }
         )
     return results

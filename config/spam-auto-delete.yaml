@@ -1,0 +1,42 @@
+# Senders and domains that should be included automatically when the user asks
+# to delete/remove all spam.
+#
+# Keep this list conservative. Use domains only for spam-only or clearly disposable domains.
+# Use exact sender addresses for public/shared mail providers such as outlook.com.
+#
+# Do not include protected finance, tax, legal, document-signature, insurance, account,
+# security, order, shipping, or known vendor correspondence senders here.
+auto_delete_domains:
+  - 8eobphe88eobphe8.com
+  - aaapackagingmaterials.com
+  - beathope.com
+  - bondlamb.com
+  - dazzwizzy.info
+  - educabinet.info
+  - enitytableful.info
+  - finemechanism.info
+  - hurtstab.com
+  - justslam.com
+  - knittry.com
+  - layerfine.info
+  - ojpxtlthq.us
+  - pdx-mobile-djs.com
+  - piwik-connector.com
+  - pctributary.info
+  - preybang.com
+  - purrgrievance.com
+  - reachward.com
+  - ssfchl.com
+  - tina.piwik-connector.com
+
+auto_delete_senders:
+  - +send.lists.bcc.lists.bcc.lists.bcc.lists.bcc.lists.emil.info@geb.jerrymcclendon.com
+  - ++send.lists.send.lists.send.lists.send.lists.send.lists@tina.piwik-connector.com
+  - jess4766881gamez@outlook.com
+  - noreply.lists.send.lists.send.lists.send.lists.send.lists9@pdx-mobile-djs.com
+  - otp-1205425@educabinet.info
+  - send.lists.bcc.lists.bcc.lists.bcc.lists.bcc.lists.emile@arizonarockproducts.com
+  - send.lists.send.lists.send.lists.send.lists.send.lists@paper-now.org
+  - sitialifah7@madrasah.kemenag.go.id
+  - tomv44320warren@outlook.com
+  - xavierp13243smith@outlook.com

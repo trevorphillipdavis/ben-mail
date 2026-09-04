@@ -21,3 +21,4 @@ class EmailMessageSummary:
     date: int | None = None
     snippet: str | None = None
     unread: bool | None = None
+    folders: list[str] = field(default_factory=list)

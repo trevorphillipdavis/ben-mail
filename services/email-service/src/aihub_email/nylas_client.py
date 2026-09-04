@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import json
 from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 from .config import NylasConfig
@@ -16,10 +16,14 @@ from .models import EmailAddress, EmailMessageSummary
 @dataclass(frozen=True)
 class RecentMessagesRequest:
     limit: int = 10
+    include_trash: bool = False
+    folder_id: str | None = None
+    received_after: int | None = None
+    received_before: int | None = None
 
     def __post_init__(self) -> None:
-        if self.limit < 1 or self.limit > 50:
-            raise ValueError("limit must be between 1 and 50")
+        if self.limit < 1 or self.limit > 200:
+            raise ValueError("limit must be between 1 and 200")
 
 
 class NylasError(Exception):
@@ -93,17 +97,38 @@ class NylasEmailClient:
                 f"Nylas configuration is incomplete. Missing: {missing_values}"
             )
 
-        query = urlencode({"limit": request.limit})
         base_uri = self._config.api_uri.rstrip("/")
-        url = f"{base_uri}/v3/grants/{self._config.grant_id}/messages?{query}"
-        payload = self._transport.get_json(
-            url,
-            headers={
-                "Authorization": f"Bearer {self._config.api_key}",
-                "Accept": "application/json",
-            },
-        )
-        return [_message_from_nylas(item) for item in payload.get("data", [])]
+        messages: list[EmailMessageSummary] = []
+        next_cursor: str | None = None
+        while len(messages) < request.limit:
+            page_limit = min(50, request.limit - len(messages))
+            query_values: dict[str, Any] = {"limit": page_limit}
+            if request.folder_id:
+                query_values["in"] = request.folder_id
+            if request.received_after is not None:
+                query_values["received_after"] = request.received_after
+            if request.received_before is not None:
+                query_values["received_before"] = request.received_before
+            if next_cursor:
+                query_values["page_token"] = next_cursor
+
+            query = urlencode(query_values)
+            url = f"{base_uri}/v3/grants/{self._config.grant_id}/messages?{query}"
+            payload = self._transport.get_json(
+                url,
+                headers={
+                    "Authorization": f"Bearer {self._config.api_key}",
+                    "Accept": "application/json",
+                },
+            )
+            messages.extend(_message_from_nylas(item) for item in payload.get("data", []))
+            next_cursor = payload.get("next_cursor")
+            if not next_cursor:
+                break
+
+        if request.include_trash:
+            return messages[: request.limit]
+        return [message for message in messages if not _is_trashed(message.folders)]
 
     def move_message_to_trash(self, message_id: str) -> dict[str, Any]:
         missing = self._config.missing_required_values()
@@ -114,12 +139,14 @@ class NylasEmailClient:
             )
 
         base_uri = self._config.api_uri.rstrip("/")
-        url = f"{base_uri}/v3/grants/{self._config.grant_id}/messages/{message_id}"
+        encoded_message_id = quote(message_id, safe="")
+        url = f"{base_uri}/v3/grants/{self._config.grant_id}/messages/{encoded_message_id}"
         return self._transport.delete_json(
             url,
             headers={
                 "Authorization": f"Bearer {self._config.api_key}",
                 "Accept": "application/json",
+                "Content-Type": "application/json",
             },
         )
 
@@ -134,6 +161,7 @@ def _message_from_nylas(data: dict[str, Any]) -> EmailMessageSummary:
         date=data.get("date"),
         snippet=data.get("snippet"),
         unread=data.get("unread"),
+        folders=_folders(data.get("folders")),
     )
 
 
@@ -145,6 +173,20 @@ def _addresses(values: list[dict[str, Any]]) -> list[EmailAddress]:
     ]
 
 
+def _folders(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    return [str(value)]
+
+
+def _is_trashed(folders: list[str]) -> bool:
+    return any("trash" in folder.lower() for folder in folders)
+
+
 def _http_error_message(error: HTTPError) -> str:
     body = error.read().decode("utf-8", errors="replace")
     try:
@@ -152,12 +194,7 @@ def _http_error_message(error: HTTPError) -> str:
     except json.JSONDecodeError:
         payload = {}
 
-    provider_message = (
-        payload.get("error", {}).get("message")
-        or payload.get("message")
-        or body.strip()
-        or "Nylas request failed."
-    )
+    provider_message = _provider_error_message(payload, body)
 
     if error.code == 401:
         return "Nylas rejected the API key or authorization header."
@@ -168,3 +205,16 @@ def _http_error_message(error: HTTPError) -> str:
     if error.code == 429:
         return "Nylas rate limit reached. Try again later."
     return f"Nylas request failed with HTTP {error.code}: {provider_message}"
+
+
+def _provider_error_message(payload: dict[str, Any], body: str) -> str:
+    error = payload.get("error")
+    if isinstance(error, dict):
+        return (
+            error.get("message")
+            or error.get("type")
+            or json.dumps(error, ensure_ascii=False)
+        )
+    if isinstance(error, str):
+        return error
+    return payload.get("message") or body.strip() or "Nylas request failed."

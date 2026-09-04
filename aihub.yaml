@@ -1,0 +1,60 @@
+project:
+  id: email-integration
+  name: Email Integration
+  type: integration
+  status: skeleton
+  owner: personal
+  local_path: C:/Users/trevo/Dropbox/GitHub/email-integration
+
+aihub:
+  role: modular-project
+  parent: AIHub
+
+version: 0.1.0
+
+boundaries:
+  owns:
+    capabilities:
+      - email
+    services:
+      - email-service
+    providers:
+      - nylas
+  depends_on:
+    projects: []
+    capabilities: []
+
+principles:
+  source_of_truth:
+    code: GitHub
+    local_knowledge: Obsidian
+    obsidian_scope: local-machine
+  execution:
+    preferred: local-first
+    ai_usage: reasoning-only-when-valuable
+  architecture:
+    style: capability-based
+    provider_strategy: interchangeable-providers
+    service_strategy: everything-is-a-service
+
+directories:
+  orchestrators: orchestrators
+  capabilities: capabilities
+  providers: providers
+  services: services
+  runtime: runtime
+  shared: shared
+  tests: tests
+  docs: docs
+  config: config
+  obsidian_vault: C:/Users/trevo/Dropbox/AIHub
+  obsidian_project_notes: Projects/email-integration
+
+capabilities:
+  email:
+    status: scaffolded
+    service: services/email-service
+    interface: capabilities/email
+    providers:
+      nylas:
+        status: placeholder

@@ -1,0 +1,20 @@
+environment: local
+
+runtime:
+  logging:
+    level: info
+    directory: logs
+
+services:
+  email:
+    enabled: false
+    provider: nylas
+
+providers:
+  nylas:
+    enabled: false
+    config_source: environment
+
+secrets:
+  policy: environment-or-local-secret-store
+  committed_secrets_allowed: false

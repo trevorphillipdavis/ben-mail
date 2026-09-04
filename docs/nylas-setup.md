@@ -26,6 +26,9 @@ NYLAS_API_KEY=
 NYLAS_API_URI=https://api.us.nylas.com
 NYLAS_GRANT_ID=
 AIHUB_ENV=local
+
+NYLAS_GRANT_ID_PERSONAL=
+NYLAS_GRANT_ID_WORK=
 ```
 
 Do not commit `.env`.
@@ -46,12 +49,30 @@ The CLI loads `.env` by default. To use another local file:
 python -m aihub_email.cli --env-file path\to\.env check-config
 ```
 
+Check a named account with:
+
+```powershell
+python -m aihub_email.cli check-config --account personal
+```
+
+List local account readiness without making Nylas API calls:
+
+```powershell
+python -m aihub_email.cli list-accounts
+```
+
 ## Read-Only Command
 
 List recent messages with:
 
 ```powershell
 python -m aihub_email.cli list-recent-messages --limit 10
+```
+
+List messages for a named account with:
+
+```powershell
+python -m aihub_email.cli list-recent-messages --account personal --limit 10
 ```
 
 For structured output:
@@ -65,6 +86,66 @@ If the Windows console displays unusual characters, use ASCII-safe output:
 ```powershell
 python -m aihub_email.cli list-recent-messages --limit 10 --ascii
 ```
+
+Export a local JSON snapshot:
+
+```powershell
+python -m aihub_email.cli list-recent-messages --limit 10 --export --ascii
+```
+
+Exports are written under `exports/` by default and are ignored by Git.
+
+Search the latest local export without making another Nylas API call:
+
+```powershell
+python -m aihub_email.cli search-exports --query security --limit 10 --ascii
+```
+
+Summarize the latest local export:
+
+```powershell
+python -m aihub_email.cli summarize-export --ascii
+```
+
+Fetch, export, and summarize in one local workflow:
+
+```powershell
+python -m aihub_email.cli refresh-snapshot --limit 10 --ascii
+```
+
+PowerShell wrappers are available under `scripts/`:
+
+```powershell
+.\scripts\list-accounts.ps1
+.\scripts\refresh-snapshot.ps1 -Limit 10
+.\scripts\search-exports.ps1 -Query security
+.\scripts\refresh-all.ps1 -Limit 10
+```
+
+## Add More Mailboxes
+
+For each mailbox:
+
+1. Connect the mailbox in the Nylas dashboard.
+2. Copy the new Grant ID.
+3. Register it locally with a stable account alias.
+
+```powershell
+.\scripts\add-account.ps1 -Account personal
+.\scripts\check-config.ps1 -Account personal
+.\scripts\refresh-snapshot.ps1 -Account personal -Limit 10
+```
+
+Use lowercase account aliases such as:
+
+```text
+personal
+work
+rentals
+business
+```
+
+The script stores the grant in `.env` as `NYLAS_GRANT_ID_<ACCOUNT>`. The `.env` file remains local and is ignored by Git.
 
 ## Read-Only Boundaries
 

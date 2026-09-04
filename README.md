@@ -70,6 +70,66 @@ python -m aihub_email.cli list-recent-messages --limit 10
 
 By default, commands load local values from `.env`. Use `--env-file path\to\.env` to point at a different local file.
 
+Named accounts are supported through grant-specific environment variables:
+
+```text
+NYLAS_GRANT_ID_PERSONAL=
+NYLAS_GRANT_ID_WORK=
+```
+
+Example:
+
+```powershell
+python -m aihub_email.cli list-recent-messages --account personal --limit 10
+```
+
+List local account readiness without calling Nylas:
+
+```powershell
+python -m aihub_email.cli list-accounts
+```
+
+Export recent message summaries to local JSON:
+
+```powershell
+python -m aihub_email.cli list-recent-messages --limit 10 --export --ascii
+```
+
+Search the latest local export without calling Nylas:
+
+```powershell
+python -m aihub_email.cli search-exports --query security --limit 10 --ascii
+```
+
+Summarize the latest local export:
+
+```powershell
+python -m aihub_email.cli summarize-export --ascii
+```
+
+Refresh the local snapshot in one command:
+
+```powershell
+python -m aihub_email.cli refresh-snapshot --limit 10 --ascii
+```
+
+PowerShell wrappers are available for routine local use:
+
+```powershell
+.\scripts\list-accounts.ps1
+.\scripts\refresh-snapshot.ps1 -Limit 10
+.\scripts\search-exports.ps1 -Query security
+.\scripts\refresh-all.ps1 -Limit 10
+```
+
+Add another connected Nylas account locally:
+
+```powershell
+.\scripts\add-account.ps1 -Account personal
+.\scripts\check-config.ps1 -Account personal
+.\scripts\refresh-snapshot.ps1 -Account personal -Limit 10
+```
+
 ## Documentation
 
 Architectural decisions are tracked in:

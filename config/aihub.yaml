@@ -17,6 +17,17 @@ providers:
     api_uri_env: NYLAS_API_URI
     api_key_env: NYLAS_API_KEY
     grant_id_env: NYLAS_GRANT_ID
+    default_account: default
+    accounts:
+      - id: default
+        label: Default mailbox
+        grant_id_env: NYLAS_GRANT_ID
+      - id: personal
+        label: Personal mailbox
+        grant_id_env: NYLAS_GRANT_ID_PERSONAL
+      - id: work
+        label: Work mailbox
+        grant_id_env: NYLAS_GRANT_ID_WORK
     allowed_operations:
       - read_messages
 

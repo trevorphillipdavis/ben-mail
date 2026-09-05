@@ -64,7 +64,6 @@ def build_today_review(request: TodayReviewRequest) -> Path:
         fetched_messages = NylasEmailClient(config).list_recent_messages(
             RecentMessagesRequest(
                 limit=200,
-                folder_id="INBOX",
                 received_after=int(start),
                 received_before=int(end),
             )
@@ -74,6 +73,8 @@ def build_today_review(request: TodayReviewRequest) -> Path:
             _annotate_message(account_id, message)
             for message in json.loads(export_path.read_text(encoding="utf-8")).get("messages", [])
             if _is_message_on_date(message, start, end)
+            and _is_inbox_message(message)
+            and not _is_trashed(message)
         ]
         account_results.append(
             {
@@ -111,6 +112,16 @@ def _is_message_on_date(message: dict[str, Any], start: float, end: float) -> bo
     if message_date is None:
         return False
     return start <= int(message_date) <= end
+
+
+def _is_inbox_message(message: dict[str, Any]) -> bool:
+    folders = " ".join(message.get("folders", [])).lower()
+    return "inbox" in folders
+
+
+def _is_trashed(message: dict[str, Any]) -> bool:
+    folders = " ".join(message.get("folders", [])).lower()
+    return "trash" in folders
 
 
 def _annotate_message(account_id: str, message: dict[str, Any]) -> dict[str, Any]:

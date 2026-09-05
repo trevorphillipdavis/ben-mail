@@ -1,5 +1,13 @@
 # Common Workflows
 
+Run commands from the repo root.
+
+```powershell
+cd C:\Users\trevo\Dropbox\GitHub\ben-mail
+```
+
+For a different user, replace that path with their local clone path.
+
 ## Add An Account
 
 ```powershell
@@ -20,6 +28,14 @@
 ```
 
 This performs a fresh live Inbox review across configured accounts.
+
+Review one account only:
+
+```powershell
+.\scripts\today-review.ps1 -Account yahoo_personal -Json
+```
+
+The review uses live provider data and writes a local JSON review under `reviews\YYYY-MM-DD\`.
 
 ## Refresh A Single Account Snapshot
 
@@ -54,6 +70,27 @@ Use domains only for clearly disposable or spam-only domains. Use exact senders 
 When asked to delete all spam, use `config/spam-auto-delete.yaml` to build a delete plan, then move matching messages to Trash.
 
 Do not hard delete unless explicitly requested.
+
+Delete jobs should use the timing budget:
+
+```text
+initial_check_delay = number_of_messages * 5 seconds
+follow_up_check_delay = 60 seconds
+```
+
+## Share Or Install Ben Mail For Another User
+
+Give the user the GitHub repo and have them run:
+
+```powershell
+git clone https://github.com/trevorphillipdavis/ben-mail.git
+cd ben-mail
+.\install.ps1
+```
+
+They must provide their own Nylas API key and Grant IDs.
+
+Do not share local `.env`, `exports`, `reviews`, or Obsidian vault files.
 
 ## Python Helper
 

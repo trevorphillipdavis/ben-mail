@@ -2,7 +2,11 @@
 
 Ben Mail is a local-first email automation project for reviewing and cleaning up multiple email accounts through Nylas.
 
-It is designed as one modular AIHub capability project: reusable scripts do the deterministic work locally, while an AI assistant can reason over the small review outputs and decide what to run next.
+It is designed as one modular AIHub capability project: reusable scripts do the deterministic work locally, while an AI assistant can reason over small review outputs and decide what to run next.
+
+This repo installs Ben Mail as a local Codex skill named `ben-mail`, with display name `Ben`.
+
+The `backend/` folder is experimental development work and is not required for the local Ben Mail skill setup.
 
 ## Architecture
 
@@ -54,6 +58,50 @@ This repository contains working local scaffolding for:
 - spam sender/domain auto-delete rules
 - safe move-to-Trash execution
 
+## Clean Machine Setup
+
+From PowerShell:
+
+```powershell
+git clone https://github.com/trevorphillipdavis/ben-mail.git
+cd ben-mail
+.\install.ps1
+```
+
+The installer:
+
+- creates a local Python virtual environment
+- installs Python dependencies
+- creates `.env` from `.env.example` if needed
+- installs the Codex skill from `skill\ben-mail`
+- writes the repo path into the installed skill's `references\install-location.md`
+- prompts for Nylas configuration and email account Grant IDs
+
+After install, verify:
+
+```powershell
+.\scripts\list-accounts.ps1 -ReadyOnly
+.\scripts\today-review.ps1
+```
+
+Expected installed skill location:
+
+```text
+%USERPROFILE%\.codex\skills\ben-mail
+```
+
+If `CODEX_HOME` is set, the skill is installed under:
+
+```text
+%CODEX_HOME%\skills\ben-mail
+```
+
+To refresh the skill after changing the repo:
+
+```powershell
+.\scripts\install-skill.ps1 -Force
+```
+
 ## Configuration
 
 Use `.env.example` to see expected environment variables. Do not commit secrets, tokens, credentials, grants, exports, or review files.
@@ -86,11 +134,13 @@ python -m aihub_email.cli list-recent-messages --limit 10
 
 By default, commands load local values from `.env`. Use `--env-file path\to\.env` to point at a different local file.
 
-Named accounts are supported through grant-specific environment variables:
+Named accounts are supported through grant-specific environment variables. The setup scripts normalize account names into environment variable names.
 
 ```text
 NYLAS_GRANT_ID_PERSONAL=
 NYLAS_GRANT_ID_WORK=
+NYLAS_GRANT_ID_GMAIL_PERSONAL=
+NYLAS_GRANT_ID_YAHOO_PERSONAL=
 ```
 
 Example:
@@ -103,6 +153,12 @@ List local account readiness without calling Nylas:
 
 ```powershell
 python -m aihub_email.cli list-accounts
+```
+
+Review only one account for today's Inbox mail:
+
+```powershell
+.\scripts\today-review.ps1 -Account yahoo_personal -Json
 ```
 
 Export recent message summaries to local JSON:
@@ -171,3 +227,27 @@ Assistant/Codex operating rules are documented in:
 - `AGENTS.md`
 
 Operational knowledge can live in a local Obsidian vault, but the reusable project source belongs in GitHub.
+
+## Sharing This Repo
+
+Share the GitHub repo only. Do not share:
+
+- `.env`
+- local exports under `exports/`
+- local reviews under `reviews/`
+- Obsidian vault contents
+- Nylas API keys or Grant IDs
+
+Each user needs their own:
+
+- Codex app installed locally
+- local clone of this repo
+- Nylas account
+- Nylas application credentials
+- one Nylas Grant ID per connected email account
+
+The normal user flow is:
+
+```text
+clone repo -> run .\install.ps1 -> connect Nylas accounts -> use $ben-mail in Codex
+```

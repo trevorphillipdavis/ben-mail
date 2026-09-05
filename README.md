@@ -108,6 +108,8 @@ Use `.env.example` to see expected environment variables. Do not commit secrets,
 
 See [Setup From Scratch](</C:/Users/trevo/Dropbox/GitHub/ben-mail/docs/setup-from-scratch.md>) for the full setup flow.
 
+See [Ben Mail Skill Setup](</C:/Users/trevo/Dropbox/GitHub/ben-mail/docs/skill-setup.md>) for Codex skill installation details.
+
 Quick start:
 
 ```powershell
